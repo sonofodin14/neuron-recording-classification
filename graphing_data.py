@@ -8,7 +8,7 @@ Class = mat['Class']
 
 d = d[1400:1500]
 
-print(min(Index))
+print(len(Index))
 
-plt.plot(d)
-plt.show()
+# plt.plot(d)
+# plt.show()
