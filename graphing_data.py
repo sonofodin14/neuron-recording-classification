@@ -13,15 +13,14 @@ d_short = d[1400:1500]
 
 sample_index = randint(0, len(sorted_Index))
 print("Sample Index: ", sample_index)
+print("Index: ", Index[sample_index])
+print("Class: ", Class[sample_index])
 d_sample = d[Index[sample_index]-5:Index[sample_index]+75]
 
-peaks, _ = spsig.find_peaks(d, height=1, width=4, threshold=0.001)
+# peaks, _ = spsig.find_peaks(d, height=1, width=4, threshold=0.001)
 
-print(len(peaks))
-
-print(len(Index))
-
-plt.plot(d_sample)
-# plt.plot(Index, d[Index.astype(int)], "x", color='r')
+# plt.plot(d_sample)
+plt.plot(d)
+plt.plot(Index, d[Index.astype(int)], "x", color='r')
 # plt.plot(peaks, d[peaks.astype(int)], "x", color='g')
 plt.show()
