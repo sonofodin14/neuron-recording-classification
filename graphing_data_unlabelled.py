@@ -9,10 +9,9 @@ mat = spio.loadmat('D2.mat', squeeze_me=True)
 d = mat['d']
 
 numtaps = 43
-fl, fu =  400/12500, 3000/12500
+fl, fu =  400/12500, 1000/12500
 
-filter_coef = sig.firwin(numtaps, [fl, fu], pass_zero=False, window='hamming')
-
+filter_coef = sig.firwin(numtaps, fu, pass_zero=False, window='hamming')
 filtered_d = sig.lfilter(filter_coef, 1.0, d)
 # shifted_back_d = np.roll(filtered_d, -17)
 
@@ -29,10 +28,10 @@ dv_scaled_again = np.gradient(dv_scaled)
 
 plt.plot(d)
 # plt.plot(moving_avg)
-plt.plot(filtered_d)
+# plt.plot(filtered_d)
 # plt.plot(shifted_back_d)
 plt.hlines([dynamic_threshold], linestyle=[':'], xmin=0, xmax=len(d))
-# plt.plot(d_integral)
+plt.plot(d_integral)
 # plt.plot(scaled_d_int)
 # plt.plot(dv_scaled)
 # plt.plot(dv_scaled_again)

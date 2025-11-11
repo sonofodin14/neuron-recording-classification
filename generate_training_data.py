@@ -2,7 +2,6 @@
 import matplotlib.pyplot as plt
 import scipy.io as spio
 import scipy.signal as spsig
-from scipy import fft
 import numpy as np
 
 # Load in D1 training data
@@ -46,15 +45,27 @@ for spike in spikes:
         case _:
             pass
 
-fft_class_1 = []
-for i in range(len(class_4_spikes)):
-    fft_sample = fft.fft(class_4_spikes[i][0])
-    fft_class_1.append(fft_sample[0:int(len(fft_sample)/2)])
+# fft_class_1 = []
+# for i in range(len(class_1_spikes)):
+#     fft_sample = fft.fft(class_1_spikes[i][0])
+#     fft_class_1.append(fft_sample[0:int(len(fft_sample)/2)])
 
-for i in range(len(fft_class_1)):
-    plt.plot(fft_class_1[i])
+# for i in range(len(fft_class_1)):
+#     plt.plot(fft_class_1[i])
 
 # for spike in class_5_spikes:
 #     plt.plot(spike[0])
 
+dt = 1/12500
+# f = class_2_spikes[0][0]
+f = d
+n = len(f)
+fhat = np.fft.fft(f,n)
+PSD = fhat * np.conj(fhat) / n
+freq = (1/(dt*n)) * np.arange(n)
+L = np.arange(1, np.floor(n/2), dtype='int')
+
+plt.plot(freq[L], PSD[L])
+plt.xlim(freq[L[0]], freq[L[-1]])
+# plt.xlim(0,1000)
 plt.show()
