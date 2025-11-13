@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import scipy.io as spio
 import numpy as np
 import keras
+from sklearn import preprocessing
 
 # Load in D1 training data
 mat = spio.loadmat('D1.mat', squeeze_me=True)
@@ -11,12 +12,18 @@ Index = mat['Index']
 sorted_Index = sorted(Index)
 Class = mat['Class']
 
+# Normalise data
+scaler = preprocessing.RobustScaler()
+d_shaped = d.reshape(-1,1)
+d_norm = scaler.fit_transform(d_shaped)
+d_to_use = d_norm.flatten()
+
 # Format: spike[x] = [d data], [index], [class]
 spike_data = []
 
 # Extract windows of spikes from index
 for i in range(len(Index)):
-    spike_data.append([d[Index[i]:Index[i]+75].tolist(), int(Index[i]), int(Class[i])])
+    spike_data.append([d_to_use[Index[i]:Index[i]+50].tolist(), int(Index[i]), int(Class[i])])
 
 spikes = [item[0] for item in spike_data]
 classes = [item[2] for item in spike_data]
