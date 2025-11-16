@@ -4,6 +4,8 @@ import scipy.io as spio
 import numpy as np
 import keras
 from sklearn import preprocessing
+from skimage.restoration import denoise_wavelet
+import scipy.signal as sig
 
 # Load in D1 training data
 mat = spio.loadmat('D1.mat', squeeze_me=True)
@@ -13,10 +15,35 @@ sorted_Index = sorted(Index)
 Class = mat['Class']
 
 # Normalise data
-scaler = preprocessing.RobustScaler()
-d_shaped = d.reshape(-1,1)
-d_norm = scaler.fit_transform(d_shaped)
-d_to_use = d_norm.flatten()
+# scaler = preprocessing.RobustScaler()
+# d_shaped = d.reshape(-1,1)
+# d_norm = scaler.fit_transform(d_shaped)
+# d_to_use = d_norm.flatten()
+d_to_use = d
+
+# Setup Filter
+numtaps = 101
+fl, fu =  300, 3000
+filter_coef = sig.firwin(numtaps, fl, pass_zero=False, window='hamming', fs=25000)
+
+# Filter & Shift Signal back
+d_filt = sig.lfilter(filter_coef, 1.0, d_to_use)
+d_filt = np.roll(d_filt, -(int(numtaps/2)))
+
+# Wavelet denoising
+d_denoise = denoise_wavelet(
+    d_filt, 
+    method='BayesShrink', 
+    mode='soft', 
+    wavelet_levels=7,
+    wavelet='sym8',
+    rescale_sigma='True',
+    )
+
+# Filter & Shift Signal back
+d_filtered = sig.lfilter(filter_coef, 1.0, d_denoise)
+d_denoise = np.roll(d_filtered, -(int(numtaps/2)))
+d_to_use = d_denoise
 
 # Format: spike[x] = [d data], [index], [class]
 spike_data = []

@@ -12,9 +12,13 @@ def load_data():
     files = ['D2.mat', 'D3.mat', 'D4.mat', 'D5.mat', 'D6.mat']
     data_entries = []
     for file in files:
-        mat = spio.loadmat(file, spueeze_me=True)
+        mat = spio.loadmat(file, squeeze_me=True)
         data_entries.append(mat['d'])
     return data_entries[0], data_entries[1], data_entries[2], data_entries[3], data_entries[4]
+
+def load_file_data(filepath):
+    mat = spio.loadmat(filepath, squeeze_me=True)
+    return mat['d']
 
 def create_bp_filter(numtaps, fl, fu, fs):
     filter_coefficients = sig.firwin(numtaps, [fl, fu], pass_zero=False, window='hamming', fs=fs)
@@ -47,86 +51,133 @@ def noise_dependent_peak_detection(data):
 def peaks_to_spike_index(peaks):
     index = np.asarray([x - 12 for x in peaks])
 
-# Load Waveform
-mat = spio.loadmat('D2.mat', squeeze_me=True)
-d = mat['d']
+def extract_spike_windows(data, index):
+    spikes = []
+    for index in Index:
+        spikes.append(data[index:index+75])
+    return spikes
 
-# Normalise data
-scaler = preprocessing.RobustScaler()
-d_shaped = d.reshape(-1,1)
-d_norm = scaler.fit_transform(d_shaped)
-d_to_use = d_norm.flatten()
+def classify_spikes(spikes):
+    # Load model and classify spikes
+    loaded_model = keras.models.load_model("best_model.keras")
 
-# Setup Filter
-numtaps = 101
-fl, fu =  250, 2750
-filter_coef = sig.firwin(numtaps, [fl, fu], pass_zero=False, window='hamming', fs=25000)
+    # Reshape spikes to fit model input
+    spikes = np.asarray(spikes)
+    spikes = spikes.reshape((spikes.shape[0], spikes.shape[1], 1))
+    Class = loaded_model.predict(spikes, verbose=2)
 
-# Filter & Shift Signal back
-d_filt = sig.lfilter(filter_coef, 1.0, d_to_use)
-d_filt = np.roll(d_filt, -(int(numtaps/2)))
+    # Convert Class into labelled prediction
+    new_class = []
+    for i in range(len(Class)):
+        classification = np.argmax(Class[i]) + 1
+        new_class.append(int(classification))
+    
+    return new_class
 
-# Wavelet denoising
-d_denoise = denoise_wavelet(
-    d_filt, 
-    method='BayesShrink', 
-    mode='hard', 
-    wavelet_levels=3,
-    wavelet='bior1.3',
-    rescale_sigma='True'
-    )
+def save_mat_file(Index, Class, filename):
+    filename = 'RESULT DATA/' + filename
+    # Pack Index and Class into .mat file
+    mat_data = {
+        'Index': Index,
+        'Class': Class
+    }
+    spio.savemat(file_name=filename, mdict=mat_data)
 
-# Calculating the Dynamic Peak Threshold
-sd_array = [abs(x)/0.6745 for x in d_denoise]
-dynamic_threshold = 4*np.median(sd_array)
+if __name__ == '__main__':
 
-# Find Peaks and Create Index List
-peaks, _ = sig.find_peaks(d_denoise, height=dynamic_threshold, distance=10, prominence=0.125)
-Index = np.asarray([x - 12 for x in peaks])
+    # Load Waveform
+    mat = spio.loadmat('D6.mat', squeeze_me=True)
+    d = mat['d']
 
-# NEXT: 
-# - slicing up waveform based on indexes for classification (index:index+75) -> needs to be same as training
-# - make everything functions/classes
-# - dynamic denoising/filtering for each dataset SNR
-# - 
+    # Normalise data
+    # scaler = preprocessing.RobustScaler()
+    # d_shaped = d.reshape(-1,1)
+    # d_norm = scaler.fit_transform(d_shaped)
+    # d_to_use = d_norm.flatten()
+    d_to_use = d
 
-# Extracting Spike Waveforms
-spikes = []
-for index in Index:
-    spikes.append(d_denoise[index:index+50])
+    # Setup Filter
+    numtaps = 101
+    fl, fu =  300, 3000
+    filter_coef = sig.firwin(numtaps, fl, pass_zero=False, window='hamming', fs=25000)
 
-# Load model and classify spikes
-loaded_model = keras.models.load_model("best_model.keras")
-# Class = []
-# for spike in spikes:
-    # Class.append(loaded_model.predict(spike))
+    # Filter & Shift Signal back
+    # d_filt = sig.lfilter(filter_coef, 1.0, d_to_use)
+    # d_filt = np.roll(d_filt, -(int(numtaps/2)))
 
-# Reshape spikes to fit model input
-spikes = np.asarray(spikes)
-spikes = spikes.reshape((spikes.shape[0], spikes.shape[1], 1))
-test_input = np.expand_dims(spikes[2], axis=0)
-Class = loaded_model.predict(spikes, verbose=2)
+    # Wavelet denoising
+    d_denoise = denoise_wavelet(
+        d, 
+        method='BayesShrink', 
+        mode='soft', 
+        wavelet_levels=7,
+        wavelet='sym8',
+        rescale_sigma='True',
+        )
+    
+    # Filter & Shift Signal back
+    d_filtered = sig.lfilter(filter_coef, 1.0, d_denoise)
+    d_denoise = np.roll(d_filtered, -(int(numtaps/2)))
 
-print(Class)
+    # Calculating the Dynamic Peak Threshold
+    sd_array = [abs(x)/0.6745 for x in d_denoise]
+    dynamic_threshold = 4.5*np.median(sd_array)
+
+    # Find Peaks and Create Index List
+    peaks, _ = sig.find_peaks(d_denoise, height=dynamic_threshold, distance=10, prominence=0.125)
+    Index = np.asarray([x - 12 for x in peaks])
+
+    # NEXT: 
+    # - slicing up waveform based on indexes for classification (index:index+75) -> needs to be same as training
+    # - make everything functions/classes
+    # - dynamic denoising/filtering for each dataset SNR
+    # - 
+
+    # Extracting Spike Waveforms
+    spikes = []
+    for index in Index:
+        spikes.append(d_denoise[index:index+50])
+
+    # Load model and classify spikes
+    loaded_model = keras.models.load_model("best_model.keras")
+
+    # Reshape spikes to fit model input
+    spikes = np.asarray(spikes)
+    spikes = spikes.reshape((spikes.shape[0], spikes.shape[1], 1))
+    Class = loaded_model.predict(spikes, verbose=2)
+
+    print(Class)
+    # print(type(Index))
+
+    # Convert Class into labelled prediction
+    new_class = []
+    for i in range(len(Class)):
+        classification = np.argmax(Class[i]) + 1
+        new_class.append(int(classification))
+    Class = new_class
+
+    # Pack Index and Class into .mat file
+    mat_data = {
+        'Index': Index,
+        'Class': Class
+    }
+    print(mat_data)
+    spio.savemat('RESULT DATA/D2.mat', mat_data)
 
 
-# Pack Index and Class into .mat file
+    # Plots
 
+    # Index and peaks shown on data
+    plt_max = len(d_denoise)
+    plt.figure(dpi=100)
+    plt.hlines([dynamic_threshold], linestyle=[':'], xmin=0, xmax=plt_max)
+    plt.plot(d_denoise[0:plt_max])
+    plt.plot(d[0:plt_max], linestyle='dotted')
+    plt.plot(peaks, d_denoise[peaks.astype(int)], "x", color='g')
+    plt.plot(Index, d_denoise[Index.astype(int)], "o", color='r')
+    plt.show()
 
-
-# Plots
-
-# Index and peaks shown on data
-# plt_max = 5000
-# plt.figure(dpi=100)
-# plt.hlines([dynamic_threshold], linestyle=[':'], xmin=0, xmax=plt_max)
-# plt.plot(d_denoise[0:plt_max])
-# plt.plot(d[0:plt_max], linestyle='dotted')
-# plt.plot(peaks, d_denoise[peaks.astype(int)], "x", color='g')
-# plt.plot(Index, d_denoise[Index.astype(int)], "o", color='r')
-# plt.show()
-
-# Show individual spike waveform
-# plt.figure(dpi=100)
-# plt.plot(spikes[randint(0, len(spikes))])
-# plt.show()
+    # Show individual spike waveform
+    # plt.figure(dpi=100)
+    # plt.plot(spikes[randint(0, len(spikes))])
+    # plt.show()
