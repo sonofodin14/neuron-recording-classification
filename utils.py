@@ -8,6 +8,8 @@ from random import randint
 import keras
 from sklearn import preprocessing
 
+TF_ENABLE_ONEDNN_OPTS=0
+
 # Functions
 def load_data():
     files = ['D2.mat', 'D3.mat', 'D4.mat', 'D5.mat', 'D6.mat']
@@ -51,7 +53,7 @@ def wavelet_denoising(data):
 def noise_dependent_peak_detection(data):
     # Calculating the Dynamic Peak Threshold dependent on standard deviation of data - this changes with noise
     stand_devs = [abs(x)/0.6745 for x in data]
-    threshold = 4.5*np.median(stand_devs)
+    threshold = 4*np.median(stand_devs)
     peaks, _ = sig.find_peaks(data, height=threshold, distance=10, prominence=0.125)
     return peaks
 
