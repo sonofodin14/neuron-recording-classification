@@ -10,8 +10,8 @@ if __name__ == "__main__":
     denoised_d = utils.wavelet_denoising(d)
 
     # High-pass filter the data
-    numtaps = 101
-    fc = 300
+    numtaps = 1501
+    fc = 100
     fs = 25000
     filter_coef = utils.create_hp_filter(numtaps, fc, fs)
     filtered_d = utils.filter_data(denoised_d, filter_coef, numtaps)
@@ -34,12 +34,12 @@ if __name__ == "__main__":
     x_train = x_train[idx]
     y_train = y_train[idx]
 
-    num_classes = num_classes = len(np.unique(y_train))
+    num_classes = len(np.unique(y_train))
     model = utils.make_model(input_shape=x_train.shape[1:], num_classes=num_classes)
 
     # Training the model
     epochs = 500
-    batch_size = 32
+    batch_size = 6
     history = utils.train_model(model, x_train, y_train, epochs=epochs, batch_size=batch_size)
 
     # Load and evaluate best model

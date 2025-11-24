@@ -12,8 +12,8 @@ if __name__ == "__main__":
         data_denoised = utils.wavelet_denoising(data)
 
         # High-pass filter data
-        numtaps = 101
-        fc = 300
+        numtaps = 1501
+        fc = 100
         fs = 25000
         filter_coef = utils.create_hp_filter(numtaps, fc, fs)
         data_filtered = utils.filter_data(data_denoised, filter_coef, numtaps)

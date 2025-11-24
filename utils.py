@@ -45,7 +45,7 @@ def wavelet_denoising(data):
         method='BayesShrink', 
         mode='soft', 
         wavelet_levels=5,
-        wavelet='db4',
+        wavelet='bior6.8',
         rescale_sigma='True'
         )
     return denoised
@@ -99,38 +99,44 @@ def save_mat_file(Index, Class, filename):
 def make_model(input_shape, num_classes):
     input_layer = keras.layers.Input(input_shape)
 
-    conv1 = keras.layers.Conv1D(filters=64, kernel_size=5, padding="same")(input_layer)
+    conv1 = keras.layers.Conv1D(filters=24, kernel_size=4, padding="same", strides=4)(input_layer)
     conv1 = keras.layers.BatchNormalization()(conv1)
     conv1 = keras.layers.ReLU()(conv1)
 
-    conv2 = keras.layers.Conv1D(filters=64, kernel_size=3, padding="same")(conv1)
+    conv2 = keras.layers.Conv1D(filters=12, kernel_size=3, padding="same", strides=4)(conv1)
     conv2 = keras.layers.BatchNormalization()(conv2)
     conv2 = keras.layers.ReLU()(conv2)
 
-    conv3 = keras.layers.Conv1D(filters=64, kernel_size=5, padding="same")(conv2)
+    conv3 = keras.layers.Conv1D(filters=16, kernel_size=4, padding="same", strides=2)(conv2)
     conv3 = keras.layers.BatchNormalization()(conv3)
     conv3 = keras.layers.ReLU()(conv3)
 
-    gap = keras.layers.GlobalAveragePooling1D()(conv3)
+    conv4 = keras.layers.Conv1D(filters=2, kernel_size=4, padding="same", strides=1)(conv3)
+    conv4 = keras.layers.BatchNormalization()(conv4)
+    conv4 = keras.layers.ReLU()(conv4)
 
-    dense_layer = keras.layers.Dense(32, activation="relu")(gap)
+    gap = keras.layers.GlobalAveragePooling1D()(conv4)
 
-    output_layer = keras.layers.Dense(num_classes, activation="softmax")(dense_layer)
+    dense_layer1 = keras.layers.Dense(256, activation="relu")(gap)
+
+    dense_layer2 = keras.layers.Dense(64, activation="relu")(dense_layer1)
+
+    output_layer = keras.layers.Dense(num_classes, activation="softmax")(dense_layer2)
 
     return keras.models.Model(inputs=input_layer, outputs=output_layer)
 
 def train_model(model, x_train, y_train, epochs=500, batch_size=32):
     callbacks = [
     keras.callbacks.ModelCheckpoint(
-        "best_model.keras", save_best_only=True, monitor="val_loss"
+        "best_model.keras", save_best_only=True, monitor="val_sparse_categorical_accuracy"
     ),
     keras.callbacks.ReduceLROnPlateau(
-        monitor="val_loss", factor=0.5, patience=20, min_lr=0.0001
+        monitor="val_loss", factor=0.5, patience=40, min_lr=0.0001
     ),
-    keras.callbacks.EarlyStopping(monitor="val_loss", patience=50, verbose=1),
+    keras.callbacks.EarlyStopping(monitor="val_loss", patience=75, verbose=1),
     ]
     model.compile(
-        optimizer="adam",
+        optimizer="adamw",
         loss="sparse_categorical_crossentropy",
         metrics=["sparse_categorical_accuracy"],
     )
