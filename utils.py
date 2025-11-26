@@ -9,6 +9,7 @@ import keras
 from sklearn import preprocessing
 
 TF_ENABLE_ONEDNN_OPTS=0
+WINDOW_WIDTH = 50
 
 # Functions
 def load_data():
@@ -64,7 +65,7 @@ def peaks_to_spike_index(peaks):
 def extract_spike_windows(data, index):
     spikes = []
     for i in index:
-        spikes.append(data[i:i+50])
+        spikes.append(data[i:i+WINDOW_WIDTH])
     return spikes
 
 def load_best_model():
