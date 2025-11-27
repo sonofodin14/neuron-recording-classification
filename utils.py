@@ -9,7 +9,7 @@ import keras
 from sklearn import preprocessing
 
 TF_ENABLE_ONEDNN_OPTS=0
-WINDOW_WIDTH = 50
+WINDOW_WIDTH = 100
 
 # Functions
 def load_data():
