@@ -1,7 +1,10 @@
-from utils import load_training_data, WINDOW_WIDTH
+from utils import load_training_data, SPIKE_WIDTH
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import ArrayLike
+
+OVERLAP = 50
+WINDOW_WIDTH = 250
 
 D1, Index, Class = load_training_data()
 
@@ -11,8 +14,7 @@ def separate_spike_classes():
 
     # Extract windows of spikes from index
     for i in range(len(Index)):
-        # spikes.append([d[Index[i]-5:Index[i]+75].tolist(), int(Index[i]), int(Class[i])])
-        spikes.append([D1[Index[i]:Index[i]+WINDOW_WIDTH].tolist(), int(Index[i]), int(Class[i])])
+        spikes.append([D1[Index[i]:Index[i]+SPIKE_WIDTH].tolist(), int(Index[i]), int(Class[i])])
 
     # Create individual lists of spike classes to explore features
     class_1_spikes = []
@@ -56,13 +58,11 @@ def list_to_overlapping_windows(list, window_length, overlap):
     return np.stack(windows) if windows else np.array([])
 
 def overlapping_windows_to_list(windows, overlap):
-    window_length = len(windows[0])
     list = []
     for window in windows:
         list = np.concatenate((list, window))
         list = list[0:-overlap]
         last_overlap_data = window[-overlap:]
-    print(last_overlap_data)
     list = np.concatenate((list, last_overlap_data))
     return list    
 
@@ -79,10 +79,6 @@ def add_noise_multiple(data_windows, noise_level):
     return np.asarray(noised_windows)
 
 def concat_arrays(*args: ArrayLike):
-    # output = np.empty(shape=args[0].shape)
-    # for arg in args:
-    #     output = np.concatenate((output, arg))
-    # return output
     return np.concatenate(args)
 
 class_1, class_2, class_3, class_4, class_5 = separate_spike_classes()
@@ -135,7 +131,7 @@ for i in range(len(Index)):
 # Ensure recon_data is a flat array
 recon_data = np.asarray(recon_data).flatten()
 
-windows_clean = list_to_overlapping_windows(recon_data, window_length=250, overlap=50)
+windows_clean = list_to_overlapping_windows(recon_data, window_length=WINDOW_WIDTH, overlap=OVERLAP)
 
 windows_n1 = add_noise_multiple(windows_clean, 0.5)
 windows_n2 = add_noise_multiple(windows_clean, 1.0)
@@ -173,10 +169,3 @@ expected_outputs = concat_arrays(
     windows_clean,
     windows_clean,
 )
-
-# noisy_inputs = windows_n1
-# expected_outputs = windows_clean
-
-# plt.plot(noisy_inputs[11])
-# plt.plot(windows_clean[11])
-# plt.show()

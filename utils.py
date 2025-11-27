@@ -9,7 +9,7 @@ import keras
 from sklearn import preprocessing
 
 TF_ENABLE_ONEDNN_OPTS=0
-WINDOW_WIDTH = 100
+SPIKE_WIDTH = 100
 
 # Functions
 def load_data():
@@ -65,15 +65,21 @@ def peaks_to_spike_index(peaks):
 def extract_spike_windows(data, index):
     spikes = []
     for i in index:
-        spikes.append(data[i:i+WINDOW_WIDTH])
-    return spikes
+        spikes.append(data[i:i+SPIKE_WIDTH])
+    # Pad any shorter items
+    max_len = max(len(sublist) for sublist in spikes)
+    padded_spikes = [list(sublist) + [0] * (max_len - len(sublist)) for sublist in spikes]
+    return np.asarray(padded_spikes)
 
-def load_best_model():
+def load_classifier_model():
     return keras.models.load_model("best_model.keras")
+
+def load_denoising_model():
+    return keras.models.load_model("best_denoiser.keras")
 
 def classify_spikes(spikes):
     # Load model and classify spikes
-    loaded_model = load_best_model()
+    loaded_model = load_classifier_model()
 
     # Reshape spikes to fit model input
     spikes = np.asarray(spikes)

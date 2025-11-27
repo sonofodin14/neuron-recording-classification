@@ -1,4 +1,6 @@
 import utils
+import DAE_funcs
+from DAE_funcs import WINDOW_WIDTH, OVERLAP
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -6,15 +8,25 @@ if __name__ == "__main__":
     # Import training data from D1.mat
     d, Index, Class =  utils.load_training_data()
 
-    # Use wavelets to denoise the data
-    denoised_d = utils.wavelet_denoising(d)
+    # # Use wavelets to denoise the data
+    # denoised_d = utils.wavelet_denoising(d)
 
     # High-pass filter the data
     numtaps = 1501
     fc = 100
     fs = 25000
     filter_coef = utils.create_hp_filter(numtaps, fc, fs)
-    filtered_d = utils.filter_data(denoised_d, filter_coef, numtaps)
+    filtered_d = utils.filter_data(d, filter_coef, numtaps)
+
+    # Load denoising model
+    denoiser = utils.load_denoising_model()
+
+    # Split data into windows and denoise
+    noisy_windows = DAE_funcs.list_to_overlapping_windows(filtered_d, WINDOW_WIDTH, OVERLAP)
+    predictions = denoiser.predict(noisy_windows, verbose=2)
+    clean_windows = np.squeeze(predictions, axis=-1)
+    # Merge windows back into single stream
+    clean_data = DAE_funcs.overlapping_windows_to_list(clean_windows, OVERLAP)
 
     # Extract spikes from indexes
     spikes = utils.extract_spike_windows(filtered_d, Index)
@@ -43,7 +55,7 @@ if __name__ == "__main__":
     history = utils.train_model(model, x_train, y_train, epochs=epochs, batch_size=batch_size)
 
     # Load and evaluate best model
-    model = utils.load_best_model()
+    model = utils.load_classifier_model()
     test_loss, test_acc = model.evaluate(x_test, y_test)
 
     print("Test accuracy", test_acc)

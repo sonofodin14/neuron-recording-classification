@@ -1,11 +1,12 @@
+# Third-Party Imports
 import numpy as np
 from keras import layers
 from keras import callbacks
 from keras.models import Model
 import matplotlib.pyplot as plt
 
-import dae_funcs as funcs
-from dae_funcs import noisy_inputs, expected_outputs
+# First-Party Imports
+from DAE_funcs import noisy_inputs, expected_outputs
 
 input = layers.Input(shape=(250, 1))
 
@@ -40,12 +41,14 @@ idx = np.random.permutation(len(x_train))
 x_train = x_train[idx]
 y_train = y_train[idx]
 
+# Set callback to save best model
 model_callbacks = [
     callbacks.ModelCheckpoint(
         "best_denoiser.keras", save_best_only=True, monitor="val_loss"
     )
 ]
 
+# Train the model
 autoencoder.fit(
     x=x_train,
     y=y_train,
@@ -56,8 +59,8 @@ autoencoder.fit(
     validation_data=(x_test, y_test),
 )
 
+# Plot example for validation
 predictions = autoencoder.predict(noisy_inputs)
-
 plt.plot(noisy_inputs[11])
 plt.plot(predictions[11])
 plt.show()
