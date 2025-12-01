@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import ArrayLike
 
-OVERLAP = 100
+OVERLAP = 125
 WINDOW_WIDTH = 250
 
 D1, Index, Class = load_training_data()
@@ -113,20 +113,23 @@ zeros = np.zeros(len(D1))
 recon_data = zeros.copy()
 
 # Replace every spike with the class average
+# for i in range(len(Index)):
+#     match Class[i]:
+#         case 1:
+#             replace_list_section(recon_data, Index[i], class_1_mean)
+#         case 2:
+#             replace_list_section(recon_data, Index[i], class_2_mean)
+#         case 3:
+#             replace_list_section(recon_data, Index[i], class_3_mean)
+#         case 4:
+#             replace_list_section(recon_data, Index[i], class_4_mean)
+#         case 5:
+#             replace_list_section(recon_data, Index[i], class_5_mean)
+#         case _:
+#             pass
+
 for i in range(len(Index)):
-    match Class[i]:
-        case 1:
-            replace_list_section(recon_data, Index[i], class_1_mean)
-        case 2:
-            replace_list_section(recon_data, Index[i], class_2_mean)
-        case 3:
-            replace_list_section(recon_data, Index[i], class_3_mean)
-        case 4:
-            replace_list_section(recon_data, Index[i], class_4_mean)
-        case 5:
-            replace_list_section(recon_data, Index[i], class_5_mean)
-        case _:
-            pass
+    replace_list_section(recon_data, Index[i], D1[Index[i]:Index[i]+SPIKE_WIDTH].tolist())
 
 # Ensure recon_data is a flat array
 recon_data = np.asarray(recon_data).flatten()

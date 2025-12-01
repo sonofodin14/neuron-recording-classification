@@ -6,10 +6,11 @@ from skimage.restoration import denoise_wavelet
 import scipy.signal as sig
 from random import randint
 import keras
+from keras import layers
 from sklearn.preprocessing import MinMaxScaler
 
 TF_ENABLE_ONEDNN_OPTS=0
-SPIKE_WIDTH = 60
+SPIKE_WIDTH = 50
 
 # Functions
 def load_data():
@@ -65,7 +66,7 @@ def noise_dependent_peak_detection(data):
     return peaks
 
 def peaks_to_spike_index(peaks):
-    index = np.asarray([x - 12 for x in peaks])
+    index = np.asarray([x - 15 for x in peaks])
     return index
 
 def extract_spike_windows(data, index):
@@ -109,28 +110,28 @@ def save_mat_file(Index, Class, filename):
     }
     spio.savemat(file_name=filename, mdict=mat_data)
 
-def make_model(input_shape, num_classes):
+def make_model_OLD(input_shape, num_classes):
     input_layer = keras.layers.Input(input_shape)
 
-    conv1 = keras.layers.Conv1D(filters=4, kernel_size=8, padding="same", strides=8)(input_layer)
+    conv1 = keras.layers.Conv1D(filters=32, kernel_size=5, padding="same", strides=1)(input_layer)
     conv1 = keras.layers.BatchNormalization()(conv1)
     conv1 = keras.layers.ReLU()(conv1)
 
-    conv2 = keras.layers.Conv1D(filters=16, kernel_size=6, padding="same", strides=6)(conv1)
+    conv2 = keras.layers.Conv1D(filters=64, kernel_size=3, padding="same", strides=1)(conv1)
     conv2 = keras.layers.BatchNormalization()(conv2)
     conv2 = keras.layers.ReLU()(conv2)
 
-    conv3 = keras.layers.Conv1D(filters=24, kernel_size=4, padding="same")(conv2)
-    conv3 = keras.layers.BatchNormalization()(conv3)
-    conv3 = keras.layers.ReLU()(conv3)
+    # conv3 = keras.layers.Conv1D(filters=24, kernel_size=4, padding="same")(conv2)
+    # conv3 = keras.layers.BatchNormalization()(conv3)
+    # conv3 = keras.layers.ReLU()(conv3)
 
-    conv4 = keras.layers.Conv1D(filters=48, kernel_size=4, padding="same", strides=4)(conv3)
-    conv4 = keras.layers.BatchNormalization()(conv4)
-    conv4 = keras.layers.ReLU()(conv4)
+    # conv4 = keras.layers.Conv1D(filters=48, kernel_size=4, padding="same", strides=4)(conv3)
+    # conv4 = keras.layers.BatchNormalization()(conv4)
+    # conv4 = keras.layers.ReLU()(conv4)
 
-    # gap = keras.layers.GlobalMaxPooling1D()(conv4)
+    gap = keras.layers.MaxPooling1D(pool_size=2)(conv2)
 
-    lstm1 = keras.layers.LSTM(units=2, activation='relu')(conv4)
+    lstm1 = keras.layers.Bidirectional(keras.layers.LSTM(units=64, activation='relu', return_sequences=False))(gap)
 
     dense_layer1 = keras.layers.Dense(256, activation="relu")(lstm1)
 
@@ -139,6 +140,49 @@ def make_model(input_shape, num_classes):
     output_layer = keras.layers.Dense(num_classes, activation="softmax")(dense_layer1)
 
     model = keras.models.Model(inputs=input_layer, outputs=output_layer)
+    model.summary()
+
+    return model
+
+def make_model(input_shape, num_classes):
+    input_layer = keras.layers.Input(input_shape)
+
+    # x = layers.Conv1D(filters=32, kernel_size=4, padding="same", strides=1)(input_layer)
+    # x = layers.BatchNormalization()(x)
+    # x = layers.ReLU()(x)
+
+    # Branch 1: Small details
+    branch_a = layers.Conv1D(filters=32, kernel_size=4, padding="same")(input_layer)
+    branch_a = layers.BatchNormalization()(branch_a)
+    branch_a = layers.ReLU()(branch_a)
+
+    # Branch 2: Medium patterns
+    branch_b = layers.Conv1D(filters=48, kernel_size=6, padding="same")(input_layer)
+    branch_b = layers.BatchNormalization()(branch_b)
+    branch_b = layers.ReLU()(branch_b)
+
+    # Branch 3: Long trends (larger kernel)
+    branch_c = layers.Conv1D(filters=64, kernel_size=12, padding="same")(input_layer)
+    branch_c = layers.BatchNormalization()(branch_c)
+    branch_c = layers.ReLU()(branch_c)
+
+    x = layers.Concatenate()([branch_a, branch_b, branch_c])
+
+    x = layers.Conv1D(filters=64, kernel_size=4, padding="same", strides=1)(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.LeakyReLU()(x)
+
+    # x = layers.MaxPooling1D(pool_size=3)(x)
+
+    x = layers.Bidirectional(layers.LSTM(units=72, return_sequences=False))(x)
+    x = layers.Dropout(0.4)(x)
+
+    x = layers.Dense(256, activation="relu")(x)
+    x = layers.Dropout(0.3)(x)
+
+    output_layer = layers.Dense(num_classes, activation="softmax")(x)
+
+    model = keras.Model(inputs=input_layer, outputs=output_layer)
     model.summary()
 
     return model

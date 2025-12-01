@@ -1,5 +1,4 @@
 # Third-Party Imports
-import matplotlib.pyplot as plt
 import numpy as np
 
 # First-Party Imports
@@ -7,33 +6,12 @@ import utils
 import DAE_funcs
 from DAE_funcs import WINDOW_WIDTH, OVERLAP
 
-# noisy_data = utils.load_file_data("TESTING DATA/D6.mat")
-
-# # High-pass filter data
-# numtaps = 1501
-# fc = 100
-# fs = 25000
-# filter_coef = utils.create_hp_filter(numtaps, fc, fs)
-# filtered_data = utils.filter_data(noisy_data, filter_coef, numtaps)
-
-# noisy_windows = DAE_funcs.list_to_overlapping_windows(filtered_data, WINDOW_WIDTH, OVERLAP)
-
-# denoiser = utils.load_denoising_model()
-# predictions = denoiser.predict(noisy_windows, verbose=2)
-# clean_windows = np.squeeze(predictions, axis=-1)
-
-# clean_data = DAE_funcs.overlapping_windows_to_list(clean_windows, OVERLAP)
-
-# plt.plot(clean_data)
-# plt.plot(noisy_data, linestyle="dotted")
-# plt.show()
-
 if __name__ == "__main__":
     file_names = ['D2.mat', 'D3.mat', 'D4.mat', 'D5.mat', 'D6.mat']
 
     # Filter Parameters
     numtaps = 1501
-    fc = 100
+    fc = 50
     fs = 25000
 
     # Load denoising model
@@ -55,8 +33,11 @@ if __name__ == "__main__":
         # Merge windows back into single stream
         clean_data = DAE_funcs.overlapping_windows_to_list(clean_windows, OVERLAP)
 
+        # Scale data to [0,1]
+        clean_data_scaled = utils.minmax_scale(clean_data)
+
         # Find peaks in data using a dynamic, standard deviation based peak detection
-        peaks = utils.noise_dependent_peak_detection(clean_data)
+        peaks = utils.noise_dependent_peak_detection(clean_data_scaled.flatten())
 
         # Convert peak indexes to spike start indexes
         Index = utils.peaks_to_spike_index(peaks)

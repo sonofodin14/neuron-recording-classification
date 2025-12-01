@@ -8,7 +8,7 @@ import utils
 import DAE_funcs
 from DAE_funcs import WINDOW_WIDTH, OVERLAP
 
-noisy_data = utils.load_file_data("TESTING DATA/D2.mat")
+noisy_data = utils.load_file_data("TESTING DATA/D5.mat")
 
 # High-pass filter data
 numtaps = 1501
@@ -34,5 +34,5 @@ threshold = 0.75*np.median(stand_devs)
 
 plt.plot(clean_data_scaled)
 plt.hlines([threshold], linestyle=[':'], xmin=0, xmax=len(clean_data_scaled))
-# plt.plot(noisy_data, linestyle="dotted")
+plt.plot(noisy_data, linestyle="dotted")
 plt.show()

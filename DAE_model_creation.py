@@ -12,9 +12,9 @@ input = layers.Input(shape=(WINDOW_WIDTH, 1))
 
 # Encoder
 x = layers.Conv1D(32, 3, activation="relu", padding="same")(input)
-x = layers.MaxPooling1D(5, padding="same")(x)
+x = layers.AveragePooling1D(2, padding="same")(x)
 x = layers.Conv1D(32, 3, activation="relu", padding="same")(x)
-x = layers.MaxPooling1D(2, padding="same")(x) ########################
+x = layers.AveragePooling1D(5, padding="same")(x) ########################
 
 # Decoder
 x = layers.Conv1DTranspose(32, 3, strides=2, activation="relu", padding="same")(x) # These layers stride size seems to alter resolution of denoising in some way
@@ -52,11 +52,12 @@ model_callbacks = [
 autoencoder.fit(
     x=x_train,
     y=y_train,
-    epochs=50,
+    epochs=25,
     batch_size=32,
     callbacks=model_callbacks,
     shuffle=True,
     validation_data=(x_test, y_test),
+    verbose=1,
 )
 
 # Plot example for validation

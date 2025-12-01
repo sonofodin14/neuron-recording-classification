@@ -3,6 +3,7 @@ import DAE_funcs
 from DAE_funcs import WINDOW_WIDTH, OVERLAP
 import numpy as np
 import matplotlib.pyplot as plt
+from random import randint
 
 if __name__ == "__main__":
     # Import training data from D1.mat
@@ -32,6 +33,20 @@ if __name__ == "__main__":
 
     # Extract spikes from indexes
     spikes = utils.extract_spike_windows(clean_data_scaled, Index)
+    # Create new spikes array that are shifted by random values to increase training robustness
+    shifted_spikes = []
+    for spike in spikes:
+        shift = randint(-6, 6)
+        shifted_spikes.append(np.roll(spike, shift))
+
+    # Combine the original and added data
+    spikes = np.asarray(list(spikes) + list(shifted_spikes))
+    Class = np.asarray(list(Class) + list(Class))
+
+    # Shuffle the combined data
+    idx = np.random.permutation(len(spikes))
+    spikes = spikes[idx]
+    Class = Class[idx]
 
     # Split data into training/testing sets
     x_train = np.asarray(spikes[0:int(0.8*len(spikes))])
