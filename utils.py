@@ -6,7 +6,7 @@ from skimage.restoration import denoise_wavelet
 import scipy.signal as sig
 from random import randint
 import keras
-from sklearn import preprocessing
+from sklearn.preprocessing import MinMaxScaler
 
 TF_ENABLE_ONEDNN_OPTS=0
 SPIKE_WIDTH = 60
@@ -51,10 +51,16 @@ def wavelet_denoising(data):
         )
     return denoised
 
-def noise_dependent_peak_detection(data, return_thresh=False):
+def minmax_scale(data):
+    scaler = MinMaxScaler()
+    data_shaped = np.asarray(data).reshape(-1, 1)
+    data_scaled = scaler.fit_transform(data_shaped)
+    return data_scaled
+
+def noise_dependent_peak_detection(data):
     # Calculating the Dynamic Peak Threshold dependent on standard deviation of data - this changes with noise
     stand_devs = [abs(x)/0.6745 for x in data]
-    threshold = 20*np.median(stand_devs)
+    threshold = 0.75*np.median(stand_devs)
     peaks, _ = sig.find_peaks(data, height=threshold, distance=10, prominence=0.125)
     return peaks
 
@@ -106,31 +112,36 @@ def save_mat_file(Index, Class, filename):
 def make_model(input_shape, num_classes):
     input_layer = keras.layers.Input(input_shape)
 
-    conv1 = keras.layers.Conv1D(filters=24, kernel_size=4, padding="same", strides=4)(input_layer)
+    conv1 = keras.layers.Conv1D(filters=4, kernel_size=8, padding="same", strides=8)(input_layer)
     conv1 = keras.layers.BatchNormalization()(conv1)
     conv1 = keras.layers.ReLU()(conv1)
 
-    conv2 = keras.layers.Conv1D(filters=12, kernel_size=3, padding="same", strides=4)(conv1)
+    conv2 = keras.layers.Conv1D(filters=16, kernel_size=6, padding="same", strides=6)(conv1)
     conv2 = keras.layers.BatchNormalization()(conv2)
     conv2 = keras.layers.ReLU()(conv2)
 
-    conv3 = keras.layers.Conv1D(filters=16, kernel_size=4, padding="same", strides=2)(conv2)
+    conv3 = keras.layers.Conv1D(filters=24, kernel_size=4, padding="same")(conv2)
     conv3 = keras.layers.BatchNormalization()(conv3)
     conv3 = keras.layers.ReLU()(conv3)
 
-    conv4 = keras.layers.Conv1D(filters=2, kernel_size=4, padding="same", strides=1)(conv3)
+    conv4 = keras.layers.Conv1D(filters=48, kernel_size=4, padding="same", strides=4)(conv3)
     conv4 = keras.layers.BatchNormalization()(conv4)
     conv4 = keras.layers.ReLU()(conv4)
 
-    gap = keras.layers.GlobalAveragePooling1D()(conv4)
+    # gap = keras.layers.GlobalMaxPooling1D()(conv4)
 
-    dense_layer1 = keras.layers.Dense(256, activation="relu")(gap)
+    lstm1 = keras.layers.LSTM(units=2, activation='relu')(conv4)
 
-    dense_layer2 = keras.layers.Dense(64, activation="relu")(dense_layer1)
+    dense_layer1 = keras.layers.Dense(256, activation="relu")(lstm1)
 
-    output_layer = keras.layers.Dense(num_classes, activation="softmax")(dense_layer2)
+    # dense_layer2 = keras.layers.Dense(256, activation="relu")(dense_layer1)
 
-    return keras.models.Model(inputs=input_layer, outputs=output_layer)
+    output_layer = keras.layers.Dense(num_classes, activation="softmax")(dense_layer1)
+
+    model = keras.models.Model(inputs=input_layer, outputs=output_layer)
+    model.summary()
+
+    return model
 
 def train_model(model, x_train, y_train, epochs=500, batch_size=32):
     callbacks = [

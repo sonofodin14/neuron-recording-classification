@@ -6,9 +6,9 @@ from keras.models import Model
 import matplotlib.pyplot as plt
 
 # First-Party Imports
-from DAE_funcs import noisy_inputs, expected_outputs
+from DAE_funcs import noisy_inputs, expected_outputs, WINDOW_WIDTH
 
-input = layers.Input(shape=(250, 1))
+input = layers.Input(shape=(WINDOW_WIDTH, 1))
 
 # Encoder
 x = layers.Conv1D(32, 3, activation="relu", padding="same")(input)

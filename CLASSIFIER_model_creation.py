@@ -13,7 +13,7 @@ if __name__ == "__main__":
 
     # High-pass filter the data
     numtaps = 1501
-    fc = 100
+    fc = 50
     fs = 25000
     filter_coef = utils.create_hp_filter(numtaps, fc, fs)
     filtered_d = utils.filter_data(d, filter_coef, numtaps)
@@ -27,9 +27,11 @@ if __name__ == "__main__":
     clean_windows = np.squeeze(predictions, axis=-1)
     # Merge windows back into single stream
     clean_data = DAE_funcs.overlapping_windows_to_list(clean_windows, OVERLAP)
+    # Scale data to range [0,1]
+    clean_data_scaled = utils.minmax_scale(clean_data)
 
     # Extract spikes from indexes
-    spikes = utils.extract_spike_windows(filtered_d, Index)
+    spikes = utils.extract_spike_windows(clean_data_scaled, Index)
 
     # Split data into training/testing sets
     x_train = np.asarray(spikes[0:int(0.8*len(spikes))])
@@ -51,7 +53,7 @@ if __name__ == "__main__":
 
     # Training the model
     epochs = 500
-    batch_size = 6
+    batch_size = 64
     history = utils.train_model(model, x_train, y_train, epochs=epochs, batch_size=batch_size)
 
     # Load and evaluate best model

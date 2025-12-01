@@ -1,6 +1,7 @@
 # Third-Party Imports
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler
 
 # First-Party Imports
 import utils
@@ -24,10 +25,14 @@ clean_windows = np.squeeze(predictions, axis=-1)
 
 clean_data = DAE_funcs.overlapping_windows_to_list(clean_windows, OVERLAP)
 
-stand_devs = [abs(x)/0.6745 for x in clean_data]
-threshold = 20*np.median(stand_devs)
+scaler = MinMaxScaler()
+clean_data_shaped = np.asarray(clean_data).reshape(-1, 1)
+clean_data_scaled = scaler.fit_transform(clean_data_shaped)
 
-plt.plot(clean_data)
-plt.hlines([threshold], linestyle=[':'], xmin=0, xmax=len(clean_data))
-plt.plot(noisy_data, linestyle="dotted")
+stand_devs = [abs(x)/0.6745 for x in clean_data_scaled]
+threshold = 0.75*np.median(stand_devs)
+
+plt.plot(clean_data_scaled)
+plt.hlines([threshold], linestyle=[':'], xmin=0, xmax=len(clean_data_scaled))
+# plt.plot(noisy_data, linestyle="dotted")
 plt.show()
