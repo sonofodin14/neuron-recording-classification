@@ -9,7 +9,7 @@ import keras
 from sklearn import preprocessing
 
 TF_ENABLE_ONEDNN_OPTS=0
-SPIKE_WIDTH = 100
+SPIKE_WIDTH = 60
 
 # Functions
 def load_data():
@@ -51,10 +51,10 @@ def wavelet_denoising(data):
         )
     return denoised
 
-def noise_dependent_peak_detection(data):
+def noise_dependent_peak_detection(data, return_thresh=False):
     # Calculating the Dynamic Peak Threshold dependent on standard deviation of data - this changes with noise
     stand_devs = [abs(x)/0.6745 for x in data]
-    threshold = 4*np.median(stand_devs)
+    threshold = 20*np.median(stand_devs)
     peaks, _ = sig.find_peaks(data, height=threshold, distance=10, prominence=0.125)
     return peaks
 

@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import ArrayLike
 
-OVERLAP = 50
+OVERLAP = 100
 WINDOW_WIDTH = 250
 
 D1, Index, Class = load_training_data()
