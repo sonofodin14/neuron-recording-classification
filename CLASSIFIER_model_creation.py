@@ -46,9 +46,18 @@ if __name__ == "__main__":
         shift = randint(-10, 10)
         shifted_spikes_2.append(np.roll(spike, shift))
 
+    # Add slightly noisy spikes to training data
+    shifted_spikes_3 = []
+    for spike in spikes:
+        noisy_spike = DAE_funcs.add_noise_individual(spike, 0.0125)
+        shifted_spikes_3.append(noisy_spike)
+
+    plt.plot(shifted_spikes_3[0])
+    plt.show()
+
     # Combine the original and added data
-    spikes = np.asarray(list(spikes) + list(shifted_spikes_1) + list(shifted_spikes_2))
-    Class = np.asarray(list(Class) + list(Class) + list(Class))
+    spikes = np.asarray(list(spikes) + list(shifted_spikes_1) + list(shifted_spikes_2) + list(shifted_spikes_3))
+    Class = np.asarray(list(Class) + list(Class) + list(Class) + list(Class))
 
     # Shuffle the combined data
     idx = np.random.permutation(len(spikes))

@@ -146,6 +146,8 @@ windows_n7 = add_noise_multiple(windows_clean, 3.5)
 windows_n8 = add_noise_multiple(windows_clean, 4.0)
 windows_n9 = add_noise_multiple(windows_clean, 4.5)
 windows_n10 = add_noise_multiple(windows_clean, 5.0)
+windows_n11 = add_noise_multiple(windows_clean, 5.5)
+windows_n12 = add_noise_multiple(windows_clean, 6.0)
 
 noisy_inputs = concat_arrays(
     windows_n1,
@@ -158,9 +160,13 @@ noisy_inputs = concat_arrays(
     windows_n8,
     windows_n9,
     windows_n10,
+    windows_n11,
+    windows_n12,
 )
 
 expected_outputs = concat_arrays(
+    windows_clean,
+    windows_clean,
     windows_clean,
     windows_clean,
     windows_clean,
