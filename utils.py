@@ -196,7 +196,7 @@ def train_model(model, x_train, y_train, epochs=500, batch_size=32):
     loss = keras.losses.CategoricalCrossentropy(label_smoothing=0.05)
     model.compile(
         optimizer="adamw",
-        loss="categorical_crossentropy",
+        loss=loss,
         metrics=["categorical_accuracy"],
     )
     history = model.fit(
