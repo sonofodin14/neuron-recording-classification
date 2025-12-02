@@ -52,8 +52,8 @@ model_callbacks = [
 autoencoder.fit(
     x=x_train,
     y=y_train,
-    epochs=25,
-    batch_size=32,
+    epochs=100,
+    batch_size=128,
     callbacks=model_callbacks,
     shuffle=True,
     validation_data=(x_test, y_test),

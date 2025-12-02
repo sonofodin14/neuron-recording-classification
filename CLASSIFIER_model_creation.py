@@ -4,6 +4,7 @@ from DAE_funcs import WINDOW_WIDTH, OVERLAP
 import numpy as np
 import matplotlib.pyplot as plt
 from random import randint
+from sklearn.preprocessing import OneHotEncoder
 
 if __name__ == "__main__":
     # Import training data from D1.mat
@@ -33,15 +34,21 @@ if __name__ == "__main__":
 
     # Extract spikes from indexes
     spikes = utils.extract_spike_windows(clean_data_scaled, Index)
+
     # Create new spikes array that are shifted by random values to increase training robustness
-    shifted_spikes = []
+    shifted_spikes_1 = []
     for spike in spikes:
-        shift = randint(-6, 6)
-        shifted_spikes.append(np.roll(spike, shift))
+        shift = randint(-5, 5)
+        shifted_spikes_1.append(np.roll(spike, shift))
+
+    shifted_spikes_2 = []
+    for spike in spikes:
+        shift = randint(-10, 10)
+        shifted_spikes_2.append(np.roll(spike, shift))
 
     # Combine the original and added data
-    spikes = np.asarray(list(spikes) + list(shifted_spikes))
-    Class = np.asarray(list(Class) + list(Class))
+    spikes = np.asarray(list(spikes) + list(shifted_spikes_1) + list(shifted_spikes_2))
+    Class = np.asarray(list(Class) + list(Class) + list(Class))
 
     # Shuffle the combined data
     idx = np.random.permutation(len(spikes))
@@ -55,6 +62,13 @@ if __name__ == "__main__":
     y_train = np.asarray(Class[0:int(0.8*len(Class))]) - 1
     y_test = np.asarray(Class[int(0.8*len(Class)):-1]) - 1
 
+    # Convert classes to one hot encoded
+    encoder = OneHotEncoder(sparse_output=False)
+    y_test_reshape = y_test.reshape(-1, 1)
+    y_test = encoder.fit_transform(y_test_reshape)
+    y_train_reshape = y_train.reshape(-1, 1)
+    y_train = encoder.fit_transform(y_train_reshape)
+
     x_train = x_train.reshape((x_train.shape[0], x_train.shape[1], 1))
     x_test = x_test.reshape((x_test.shape[0], x_test.shape[1], 1))
 
@@ -63,7 +77,7 @@ if __name__ == "__main__":
     x_train = x_train[idx]
     y_train = y_train[idx]
 
-    num_classes = len(np.unique(y_train))
+    num_classes = 5
     model = utils.make_model(input_shape=x_train.shape[1:], num_classes=num_classes)
 
     # Training the model
@@ -79,7 +93,7 @@ if __name__ == "__main__":
     print("Test loss", test_loss)
 
     # Plot model's losses
-    metric = "sparse_categorical_accuracy"
+    metric = "categorical_accuracy"
     plt.figure()
     plt.plot(history.history[metric])
     plt.plot(history.history["val_" + metric])

@@ -10,7 +10,7 @@ from keras import layers
 from sklearn.preprocessing import MinMaxScaler
 
 TF_ENABLE_ONEDNN_OPTS=0
-SPIKE_WIDTH = 50
+SPIKE_WIDTH = 75
 
 # Functions
 def load_data():
@@ -147,10 +147,6 @@ def make_model_OLD(input_shape, num_classes):
 def make_model(input_shape, num_classes):
     input_layer = keras.layers.Input(input_shape)
 
-    # x = layers.Conv1D(filters=32, kernel_size=4, padding="same", strides=1)(input_layer)
-    # x = layers.BatchNormalization()(x)
-    # x = layers.ReLU()(x)
-
     # Branch 1: Small details
     branch_a = layers.Conv1D(filters=32, kernel_size=4, padding="same")(input_layer)
     branch_a = layers.BatchNormalization()(branch_a)
@@ -161,7 +157,7 @@ def make_model(input_shape, num_classes):
     branch_b = layers.BatchNormalization()(branch_b)
     branch_b = layers.ReLU()(branch_b)
 
-    # Branch 3: Long trends (larger kernel)
+    # Branch 3: Long trends
     branch_c = layers.Conv1D(filters=64, kernel_size=12, padding="same")(input_layer)
     branch_c = layers.BatchNormalization()(branch_c)
     branch_c = layers.ReLU()(branch_c)
@@ -172,7 +168,7 @@ def make_model(input_shape, num_classes):
     x = layers.BatchNormalization()(x)
     x = layers.LeakyReLU()(x)
 
-    # x = layers.MaxPooling1D(pool_size=3)(x)
+    x = layers.MaxPooling1D(pool_size=2)(x)
 
     x = layers.Bidirectional(layers.LSTM(units=72, return_sequences=False))(x)
     x = layers.Dropout(0.4)(x)
@@ -190,17 +186,18 @@ def make_model(input_shape, num_classes):
 def train_model(model, x_train, y_train, epochs=500, batch_size=32):
     callbacks = [
     keras.callbacks.ModelCheckpoint(
-        "best_model.keras", save_best_only=True, monitor="val_sparse_categorical_accuracy"
+        "best_model.keras", save_best_only=True, monitor="val_categorical_accuracy"
     ),
     keras.callbacks.ReduceLROnPlateau(
-        monitor="val_loss", factor=0.5, patience=40, min_lr=0.0001
+        monitor="val_loss", factor=0.5, patience=5, min_lr=0.000001
     ),
-    keras.callbacks.EarlyStopping(monitor="val_loss", patience=75, verbose=1),
+    keras.callbacks.EarlyStopping(monitor="val_loss", patience=50, verbose=1),
     ]
+    loss = keras.losses.CategoricalCrossentropy(label_smoothing=0.05)
     model.compile(
         optimizer="adamw",
-        loss="sparse_categorical_crossentropy",
-        metrics=["sparse_categorical_accuracy"],
+        loss="categorical_crossentropy",
+        metrics=["categorical_accuracy"],
     )
     history = model.fit(
         x_train,

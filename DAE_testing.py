@@ -8,7 +8,7 @@ import utils
 import DAE_funcs
 from DAE_funcs import WINDOW_WIDTH, OVERLAP
 
-noisy_data = utils.load_file_data("TESTING DATA/D5.mat")
+noisy_data = utils.load_file_data("TESTING DATA/D6.mat")
 
 # High-pass filter data
 numtaps = 1501
