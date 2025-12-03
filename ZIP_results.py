@@ -21,10 +21,10 @@ def main():
         print(file_name)
     
     today = str(date.today())
-    zip_name = 'SUBMISSIONS/lm2491_D2-D6_' + today
+    zip_name = 'SUBMISSIONS/lm2491_D2-D6_' + today + '.zip'
     with ZipFile(zip_name, 'w') as zip:
         for file in file_paths:
-            zip.write(file)
+            zip.write(file, arcname=os.path.basename(file))
 
     print("All files zipped.")
 

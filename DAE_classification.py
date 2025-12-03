@@ -43,7 +43,7 @@ if __name__ == "__main__":
         Index = utils.peaks_to_spike_index(peaks)
 
         # Gather spike data windows
-        spikes = utils.extract_spike_windows(clean_data, Index)
+        spikes = utils.extract_spike_windows(clean_data_scaled, Index)
         print(spikes.shape)
 
         # Classify each spike
