@@ -1,4 +1,7 @@
 # Third-Party Imports
+import os
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '1' # Set to stop keras warning
+
 import numpy as np
 from keras import layers
 from keras import callbacks
@@ -7,28 +10,23 @@ import matplotlib.pyplot as plt
 
 # First-Party Imports
 from DAE_funcs import noisy_inputs, expected_outputs, WINDOW_WIDTH
-from utils import minmax_scale
 
 input = layers.Input(shape=(WINDOW_WIDTH, 1))
 
 # Encoder
 x = layers.Conv1D(32, 3, activation="relu", padding="same")(input)
 x = layers.AveragePooling1D(2, padding="same")(x)
-x = layers.Conv1D(32, 3, activation="relu", padding="same")(x)
-x = layers.AveragePooling1D(5, padding="same")(x) ########################
+x = layers.Conv1D(64, 3, activation="relu", padding="same")(x)
+x = layers.AveragePooling1D(2, padding="same")(x)
 
+# Decoder
 x = layers.UpSampling1D(size=2)(x) 
-x = layers.Conv1D(32, 3, activation="relu", padding="same")(x)
-x = layers.UpSampling1D(size=5)(x) 
-x = layers.Conv1D(32, 3, activation="relu", padding="same")(x)
+x = layers.Conv1D(64, 7, activation="relu", padding="same")(x)
+x = layers.UpSampling1D(size=2)(x) 
+x = layers.Conv1D(32, 5, activation="relu", padding="same")(x)
 
 # Output
 x = layers.Conv1D(1, 3, activation="linear", padding="same")(x)
-
-# # Decoder
-# x = layers.Conv1DTranspose(32, 3, strides=2, activation="relu", padding="same")(x) # These layers stride size seems to alter resolution of denoising in some way
-# x = layers.Conv1DTranspose(32, 3, strides=5, activation="relu", padding="same")(x)
-# x = layers.Conv1D(1, 3, activation="linear", padding="same")(x)
 
 # Autoencoder
 autoencoder = Model(input, x)
@@ -54,14 +52,21 @@ y_train = y_train[idx]
 model_callbacks = [
     callbacks.ModelCheckpoint(
         "best_denoiser.keras", save_best_only=True, monitor="val_loss"
-    )
+    ),
+    callbacks.ReduceLROnPlateau(
+        monitor="val_loss", factor=0.5, patience=5, min_lr=0.00001
+    ),
+    callbacks.EarlyStopping(
+        monitor="val_loss", patience=15, verbose=1
+    ),
 ]
+
 
 # Train the model
 autoencoder.fit(
     x=x_train,
     y=y_train,
-    epochs=15,
+    epochs=100,
     batch_size=128,
     callbacks=model_callbacks,
     shuffle=True,

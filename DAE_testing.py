@@ -8,7 +8,7 @@ import utils
 import DAE_funcs
 from DAE_funcs import WINDOW_WIDTH, OVERLAP
 
-noisy_data = utils.load_file_data("TESTING DATA/D2.mat")
+noisy_data = utils.load_file_data("TESTING DATA/D6.mat")
 # noisy_data = utils.load_file_data("TRAINING DATA/D1.mat")
 
 # High-pass filter data
@@ -27,8 +27,10 @@ clean_windows = np.squeeze(predictions, axis=-1)
 clean_data = DAE_funcs.overlapping_windows_to_list(clean_windows, OVERLAP)
 # clean_data_filtered = utils.filter_data(clean_data, filter_coef, numtaps)
 
+# clean_data = DAE_funcs.minmax_scale(clean_data)
+
 stand_devs = [abs(x)/0.6745 for x in clean_data]
-threshold = 0.5*np.median(stand_devs)
+threshold = 40*np.median(stand_devs)
 
 plt.plot(clean_data)
 plt.hlines([threshold], linestyle=[':'], xmin=0, xmax=len(clean_data))

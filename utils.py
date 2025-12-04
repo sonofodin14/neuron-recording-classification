@@ -10,7 +10,7 @@ from keras import layers
 from sklearn.preprocessing import MinMaxScaler
 
 TF_ENABLE_ONEDNN_OPTS=0
-SPIKE_WIDTH = 75
+SPIKE_WIDTH = 64
 
 # Functions
 def load_data():
@@ -61,7 +61,7 @@ def minmax_scale(data):
 def noise_dependent_peak_detection(data):
     # Calculating the Dynamic Peak Threshold dependent on standard deviation of data - this changes with noise
     stand_devs = [abs(x)/0.6745 for x in data]
-    threshold = 0.75*np.median(stand_devs)
+    threshold = 40*np.median(stand_devs)
     peaks, _ = sig.find_peaks(data, height=threshold, distance=10, prominence=0.125)
     return peaks
 
@@ -148,19 +148,19 @@ def make_model(input_shape, num_classes):
     input_layer = keras.layers.Input(input_shape)
 
     # Branch 1: Small details
-    branch_a = layers.Conv1D(filters=32, kernel_size=4, padding="same")(input_layer)
+    branch_a = layers.Conv1D(filters=64, kernel_size=4, padding="same")(input_layer)
     branch_a = layers.BatchNormalization()(branch_a)
-    branch_a = layers.ReLU()(branch_a)
+    branch_a = layers.LeakyReLU()(branch_a)
 
     # Branch 2: Medium patterns
-    branch_b = layers.Conv1D(filters=48, kernel_size=6, padding="same")(input_layer)
+    branch_b = layers.Conv1D(filters=64, kernel_size=8, padding="same")(input_layer)
     branch_b = layers.BatchNormalization()(branch_b)
-    branch_b = layers.ReLU()(branch_b)
+    branch_b = layers.LeakyReLU()(branch_b)
 
     # Branch 3: Long trends
-    branch_c = layers.Conv1D(filters=64, kernel_size=12, padding="same")(input_layer)
+    branch_c = layers.Conv1D(filters=64, kernel_size=16, padding="same")(input_layer)
     branch_c = layers.BatchNormalization()(branch_c)
-    branch_c = layers.ReLU()(branch_c)
+    branch_c = layers.LeakyReLU()(branch_c)
 
     x = layers.Concatenate()([branch_a, branch_b, branch_c])
 
@@ -168,13 +168,13 @@ def make_model(input_shape, num_classes):
     x = layers.BatchNormalization()(x)
     x = layers.LeakyReLU()(x)
 
-    x = layers.MaxPooling1D(pool_size=2)(x)
+    # x = layers.MaxPooling1D(pool_size=2)(x)
 
-    x = layers.Bidirectional(layers.LSTM(units=72, return_sequences=False))(x)
-    x = layers.Dropout(0.4)(x)
+    x = layers.Bidirectional(layers.LSTM(units=64, return_sequences=False))(x)
+    x = layers.Dropout(0.2)(x)
 
-    x = layers.Dense(256, activation="relu")(x)
-    x = layers.Dropout(0.3)(x)
+    x = layers.Dense(128, activation="relu")(x)
+    x = layers.Dropout(0.2)(x)
 
     output_layer = layers.Dense(num_classes, activation="softmax")(x)
 
@@ -191,9 +191,9 @@ def train_model(model, x_train, y_train, epochs=500, batch_size=32):
     keras.callbacks.ReduceLROnPlateau(
         monitor="val_loss", factor=0.5, patience=5, min_lr=0.000001
     ),
-    keras.callbacks.EarlyStopping(monitor="val_loss", patience=50, verbose=1),
+    keras.callbacks.EarlyStopping(monitor="val_loss", patience=40, verbose=1),
     ]
-    loss = keras.losses.CategoricalCrossentropy(label_smoothing=0.05)
+    loss = keras.losses.CategoricalCrossentropy(label_smoothing=0.1)
     model.compile(
         optimizer="adamw",
         loss=loss,

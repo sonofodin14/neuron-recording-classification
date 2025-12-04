@@ -37,7 +37,7 @@ if __name__ == "__main__":
         clean_data_scaled = utils.minmax_scale(clean_data)
 
         # Find peaks in data using a dynamic, standard deviation based peak detection
-        peaks = utils.noise_dependent_peak_detection(clean_data_scaled.flatten())
+        peaks = utils.noise_dependent_peak_detection(clean_data.flatten())
 
         # Convert peak indexes to spike start indexes
         Index = utils.peaks_to_spike_index(peaks)
