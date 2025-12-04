@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import ArrayLike
 
-OVERLAP = 100
+OVERLAP = 125
 WINDOW_WIDTH = 250
 
 D1, Index, Class = load_training_data()
@@ -73,14 +73,14 @@ def add_noise_individual(data, noise_level):
     return noisy_data
 
 def add_brownian_noise(data, noise_level):
-    shape = data.shape
+    num_samples = len(data)
     # Start with white noise as the base signal
-    white_noise = np.random.normal(0, noise_level, shape)
+    white_noise = np.random.normal(0, noise_level, num_samples)
     # Perform a cumulative sum (integration) to create the brownian effect
     # This accumulates previous values, creating the characteristic low-frequency emphasis
     brownian_noise = np.cumsum(white_noise)
     # Normalize to prevent clipping (values going beyond -1 to 1 range)
-    brownian_noise = brownian_noise / np.max(np.abs(brownian_noise))
+    # brownian_noise = brownian_noise / np.max(np.abs(brownian_noise))
     return data + brownian_noise
 
 def add_brownian_multiple(data_windows, noise_level):
@@ -151,26 +151,56 @@ for i in range(len(Index)):
 # Ensure recon_data is a flat array
 perfect_data = np.asarray(recon_data).flatten()
 n1_data = add_brownian_noise(perfect_data, 0.5)
+n2_data = add_brownian_noise(perfect_data, 1.0)
+n3_data = add_brownian_noise(perfect_data, 1.5)
+n4_data = add_brownian_noise(perfect_data, 2.0)
+n5_data = add_brownian_noise(perfect_data, 2.5)
+n6_data = add_brownian_noise(perfect_data, 3.0)
+n7_data = add_brownian_noise(perfect_data, 3.5)
+n8_data = add_brownian_noise(perfect_data, 4.0)
+n9_data = add_brownian_noise(perfect_data, 4.5)
+n10_data = add_brownian_noise(perfect_data, 5.0)
+n11_data = add_brownian_noise(perfect_data, 5.5)
+n12_data = add_brownian_noise(perfect_data, 6.0)
+n13_data = add_brownian_noise(perfect_data, 6.5)
+n14_data = add_brownian_noise(perfect_data, 7.0)
+n15_data = add_brownian_noise(perfect_data, 7.5)
+n16_data = add_brownian_noise(perfect_data, 8.0)
 
 windows_clean = list_to_overlapping_windows(perfect_data, window_length=WINDOW_WIDTH, overlap=OVERLAP)
-windows_n1 = list_to_overlapping_windows(n1_data, window_length=WINDOW_WIDTH, overlap=OVERLAP) # CHANGE TO THIS
+windows_n1 = list_to_overlapping_windows(n1_data, window_length=WINDOW_WIDTH, overlap=OVERLAP)
+windows_n2 = list_to_overlapping_windows(n2_data, window_length=WINDOW_WIDTH, overlap=OVERLAP)
+windows_n3 = list_to_overlapping_windows(n3_data, window_length=WINDOW_WIDTH, overlap=OVERLAP)
+windows_n4 = list_to_overlapping_windows(n4_data, window_length=WINDOW_WIDTH, overlap=OVERLAP)
+windows_n5 = list_to_overlapping_windows(n5_data, window_length=WINDOW_WIDTH, overlap=OVERLAP)
+windows_n6 = list_to_overlapping_windows(n6_data, window_length=WINDOW_WIDTH, overlap=OVERLAP)
+windows_n7 = list_to_overlapping_windows(n7_data, window_length=WINDOW_WIDTH, overlap=OVERLAP)
+windows_n8 = list_to_overlapping_windows(n8_data, window_length=WINDOW_WIDTH, overlap=OVERLAP)
+windows_n9 = list_to_overlapping_windows(n9_data, window_length=WINDOW_WIDTH, overlap=OVERLAP)
+windows_n10 = list_to_overlapping_windows(n10_data, window_length=WINDOW_WIDTH, overlap=OVERLAP)
+windows_n11 = list_to_overlapping_windows(n11_data, window_length=WINDOW_WIDTH, overlap=OVERLAP)
+windows_n12 = list_to_overlapping_windows(n12_data, window_length=WINDOW_WIDTH, overlap=OVERLAP)
+windows_n13 = list_to_overlapping_windows(n13_data, window_length=WINDOW_WIDTH, overlap=OVERLAP)
+windows_n14 = list_to_overlapping_windows(n14_data, window_length=WINDOW_WIDTH, overlap=OVERLAP)
+windows_n15 = list_to_overlapping_windows(n15_data, window_length=WINDOW_WIDTH, overlap=OVERLAP)
+windows_n16 = list_to_overlapping_windows(n16_data, window_length=WINDOW_WIDTH, overlap=OVERLAP)
 
-windows_n1 = add_brownian_multiple(windows_clean, 0.5)
-windows_n2 = add_brownian_multiple(windows_clean, 1.0) 
-windows_n3 = add_brownian_multiple(windows_clean, 1.5)
-windows_n4 = add_brownian_multiple(windows_clean, 2.0)
-windows_n5 = add_brownian_multiple(windows_clean, 2.5)
-windows_n6 = add_brownian_multiple(windows_clean, 3.0)
-windows_n7 = add_brownian_multiple(windows_clean, 3.5)
-windows_n8 = add_brownian_multiple(windows_clean, 4.0)
-windows_n9 = add_brownian_multiple(windows_clean, 4.5)
-windows_n10 = add_brownian_multiple(windows_clean, 5.0)
-windows_n11 = add_brownian_multiple(windows_clean, 5.5)
-windows_n12 = add_brownian_multiple(windows_clean, 6.0)
-windows_n13 = add_brownian_multiple(windows_clean, 6.5)
-windows_n14 = add_brownian_multiple(windows_clean, 7.0)
-windows_n15 = add_brownian_multiple(windows_clean, 7.5)
-windows_n16 = add_brownian_multiple(windows_clean, 8.0)
+# windows_n1 = add_brownian_multiple(windows_clean, 0.5)
+# windows_n2 = add_brownian_multiple(windows_clean, 1.0) 
+# windows_n3 = add_brownian_multiple(windows_clean, 1.5)
+# windows_n4 = add_brownian_multiple(windows_clean, 2.0)
+# windows_n5 = add_brownian_multiple(windows_clean, 2.5)
+# windows_n6 = add_brownian_multiple(windows_clean, 3.0)
+# windows_n7 = add_brownian_multiple(windows_clean, 3.5)
+# windows_n8 = add_brownian_multiple(windows_clean, 4.0)
+# windows_n9 = add_brownian_multiple(windows_clean, 4.5)
+# windows_n10 = add_brownian_multiple(windows_clean, 5.0)
+# windows_n11 = add_brownian_multiple(windows_clean, 5.5)
+# windows_n12 = add_brownian_multiple(windows_clean, 6.0)
+# windows_n13 = add_brownian_multiple(windows_clean, 6.5)
+# windows_n14 = add_brownian_multiple(windows_clean, 7.0)
+# windows_n15 = add_brownian_multiple(windows_clean, 7.5)
+# windows_n16 = add_brownian_multiple(windows_clean, 8.0)
 
 noisy_inputs = concat_arrays(
     windows_n1,
@@ -209,3 +239,8 @@ expected_outputs = concat_arrays(
     windows_clean,
     windows_clean,
 )
+
+# Shuffle the combined data
+idx = np.random.permutation(len(noisy_inputs))
+noisy_inputs = noisy_inputs[idx]
+expected_outputs = expected_outputs[idx]
