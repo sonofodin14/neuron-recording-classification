@@ -1,9 +1,9 @@
-from utils import load_training_data, SPIKE_WIDTH
+from utils import load_training_data, minmax_scale, SPIKE_WIDTH
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import ArrayLike
 
-OVERLAP = 125
+OVERLAP = 100
 WINDOW_WIDTH = 250
 
 D1, Index, Class = load_training_data()
@@ -72,6 +72,23 @@ def add_noise_individual(data, noise_level):
     noisy_data = data + noise
     return noisy_data
 
+def add_brownian_noise(data, noise_level):
+    shape = data.shape
+    # Start with white noise as the base signal
+    white_noise = np.random.normal(0, noise_level, shape)
+    # Perform a cumulative sum (integration) to create the brownian effect
+    # This accumulates previous values, creating the characteristic low-frequency emphasis
+    brownian_noise = np.cumsum(white_noise)
+    # Normalize to prevent clipping (values going beyond -1 to 1 range)
+    brownian_noise = brownian_noise / np.max(np.abs(brownian_noise))
+    return data + brownian_noise
+
+def add_brownian_multiple(data_windows, noise_level):
+    noised_windows = []
+    for i in range(len(data_windows)):
+        noised_windows.append(add_brownian_noise(data_windows[i], noise_level))
+    return np.asarray(noised_windows)
+
 def add_noise_multiple(data_windows, noise_level):
     noised_windows = []
     for i in range(len(data_windows)):
@@ -113,41 +130,47 @@ zeros = np.zeros(len(D1))
 recon_data = zeros.copy()
 
 # Replace every spike with the class average
-# for i in range(len(Index)):
-#     match Class[i]:
-#         case 1:
-#             replace_list_section(recon_data, Index[i], class_1_mean)
-#         case 2:
-#             replace_list_section(recon_data, Index[i], class_2_mean)
-#         case 3:
-#             replace_list_section(recon_data, Index[i], class_3_mean)
-#         case 4:
-#             replace_list_section(recon_data, Index[i], class_4_mean)
-#         case 5:
-#             replace_list_section(recon_data, Index[i], class_5_mean)
-#         case _:
-#             pass
-
 for i in range(len(Index)):
-    replace_list_section(recon_data, Index[i], D1[Index[i]:Index[i]+SPIKE_WIDTH].tolist())
+    match Class[i]:
+        case 1:
+            replace_list_section(recon_data, Index[i], class_1_mean)
+        case 2:
+            replace_list_section(recon_data, Index[i], class_2_mean)
+        case 3:
+            replace_list_section(recon_data, Index[i], class_3_mean)
+        case 4:
+            replace_list_section(recon_data, Index[i], class_4_mean)
+        case 5:
+            replace_list_section(recon_data, Index[i], class_5_mean)
+        case _:
+            pass
+
+# for i in range(len(Index)):
+#     replace_list_section(recon_data, Index[i], D1[Index[i]:Index[i]+SPIKE_WIDTH].tolist())
 
 # Ensure recon_data is a flat array
-recon_data = np.asarray(recon_data).flatten()
+perfect_data = np.asarray(recon_data).flatten()
+n1_data = add_brownian_noise(perfect_data, 0.5)
 
-windows_clean = list_to_overlapping_windows(recon_data, window_length=WINDOW_WIDTH, overlap=OVERLAP)
+windows_clean = list_to_overlapping_windows(perfect_data, window_length=WINDOW_WIDTH, overlap=OVERLAP)
+windows_n1 = list_to_overlapping_windows(n1_data, window_length=WINDOW_WIDTH, overlap=OVERLAP) # CHANGE TO THIS
 
-windows_n1 = add_noise_multiple(windows_clean, 0.5)
-windows_n2 = add_noise_multiple(windows_clean, 1.0)
-windows_n3 = add_noise_multiple(windows_clean, 1.5)
-windows_n4 = add_noise_multiple(windows_clean, 2.0)
-windows_n5 = add_noise_multiple(windows_clean, 2.5)
-windows_n6 = add_noise_multiple(windows_clean, 3.0)
-windows_n7 = add_noise_multiple(windows_clean, 3.5)
-windows_n8 = add_noise_multiple(windows_clean, 4.0)
-windows_n9 = add_noise_multiple(windows_clean, 4.5)
-windows_n10 = add_noise_multiple(windows_clean, 5.0)
-windows_n11 = add_noise_multiple(windows_clean, 5.5)
-windows_n12 = add_noise_multiple(windows_clean, 6.0)
+windows_n1 = add_brownian_multiple(windows_clean, 0.5)
+windows_n2 = add_brownian_multiple(windows_clean, 1.0) 
+windows_n3 = add_brownian_multiple(windows_clean, 1.5)
+windows_n4 = add_brownian_multiple(windows_clean, 2.0)
+windows_n5 = add_brownian_multiple(windows_clean, 2.5)
+windows_n6 = add_brownian_multiple(windows_clean, 3.0)
+windows_n7 = add_brownian_multiple(windows_clean, 3.5)
+windows_n8 = add_brownian_multiple(windows_clean, 4.0)
+windows_n9 = add_brownian_multiple(windows_clean, 4.5)
+windows_n10 = add_brownian_multiple(windows_clean, 5.0)
+windows_n11 = add_brownian_multiple(windows_clean, 5.5)
+windows_n12 = add_brownian_multiple(windows_clean, 6.0)
+windows_n13 = add_brownian_multiple(windows_clean, 6.5)
+windows_n14 = add_brownian_multiple(windows_clean, 7.0)
+windows_n15 = add_brownian_multiple(windows_clean, 7.5)
+windows_n16 = add_brownian_multiple(windows_clean, 8.0)
 
 noisy_inputs = concat_arrays(
     windows_n1,
@@ -162,9 +185,17 @@ noisy_inputs = concat_arrays(
     windows_n10,
     windows_n11,
     windows_n12,
+    windows_n13,
+    windows_n14,
+    windows_n15,
+    windows_n16,
 )
 
 expected_outputs = concat_arrays(
+    windows_clean,
+    windows_clean,
+    windows_clean,
+    windows_clean,
     windows_clean,
     windows_clean,
     windows_clean,

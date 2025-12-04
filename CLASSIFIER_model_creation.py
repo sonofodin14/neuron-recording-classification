@@ -19,6 +19,7 @@ if __name__ == "__main__":
     fs = 25000
     filter_coef = utils.create_hp_filter(numtaps, fc, fs)
     filtered_d = utils.filter_data(d, filter_coef, numtaps)
+    filtered_d = utils.minmax_scale(filtered_d)
 
     # Load denoising model
     denoiser = utils.load_denoising_model()
@@ -30,10 +31,10 @@ if __name__ == "__main__":
     # Merge windows back into single stream
     clean_data = DAE_funcs.overlapping_windows_to_list(clean_windows, OVERLAP)
     # Scale data to range [0,1]
-    clean_data_scaled = utils.minmax_scale(clean_data)
+    # clean_data_scaled = utils.minmax_scale(clean_data)
 
     # Extract spikes from indexes
-    spikes = utils.extract_spike_windows(clean_data_scaled, Index)
+    spikes = utils.extract_spike_windows(clean_data, Index)
 
     # Create new spikes array that are shifted by random values to increase training robustness
     shifted_spikes_1 = []

@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 # First-Party Imports
 from DAE_funcs import noisy_inputs, expected_outputs, WINDOW_WIDTH
+from utils import minmax_scale
 
 input = layers.Input(shape=(WINDOW_WIDTH, 1))
 
@@ -16,10 +17,18 @@ x = layers.AveragePooling1D(2, padding="same")(x)
 x = layers.Conv1D(32, 3, activation="relu", padding="same")(x)
 x = layers.AveragePooling1D(5, padding="same")(x) ########################
 
-# Decoder
-x = layers.Conv1DTranspose(32, 3, strides=2, activation="relu", padding="same")(x) # These layers stride size seems to alter resolution of denoising in some way
-x = layers.Conv1DTranspose(32, 3, strides=5, activation="relu", padding="same")(x)
+x = layers.UpSampling1D(size=2)(x) 
+x = layers.Conv1D(32, 3, activation="relu", padding="same")(x)
+x = layers.UpSampling1D(size=5)(x) 
+x = layers.Conv1D(32, 3, activation="relu", padding="same")(x)
+
+# Output
 x = layers.Conv1D(1, 3, activation="linear", padding="same")(x)
+
+# # Decoder
+# x = layers.Conv1DTranspose(32, 3, strides=2, activation="relu", padding="same")(x) # These layers stride size seems to alter resolution of denoising in some way
+# x = layers.Conv1DTranspose(32, 3, strides=5, activation="relu", padding="same")(x)
+# x = layers.Conv1D(1, 3, activation="linear", padding="same")(x)
 
 # Autoencoder
 autoencoder = Model(input, x)
@@ -52,7 +61,7 @@ model_callbacks = [
 autoencoder.fit(
     x=x_train,
     y=y_train,
-    epochs=100,
+    epochs=15,
     batch_size=128,
     callbacks=model_callbacks,
     shuffle=True,
