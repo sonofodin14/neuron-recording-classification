@@ -1,10 +1,10 @@
-from utils import load_training_data, minmax_scale, SPIKE_WIDTH
+from utils import load_training_data, minmax_scale, SPIKE_WIDTH, create_hp_filter, filter_data
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import ArrayLike
 
-OVERLAP = 100
-WINDOW_WIDTH = 200
+OVERLAP = 64
+WINDOW_WIDTH = 256
 
 D1, Index, Class = load_training_data()
 
@@ -150,24 +150,62 @@ for i in range(len(Index)):
 # for i in range(len(Index)):
 #     replace_list_section(recon_data, Index[i], D1[Index[i]:Index[i]+SPIKE_WIDTH].tolist())
 
+numtaps = 1501
+fc = 50
+fs = 25000
+filter_coef = create_hp_filter(numtaps, fc, fs)
+
 # Ensure recon_data is a flat array
 perfect_data = np.asarray(recon_data).flatten()
 n1_data = add_brownian_white_noise(perfect_data, 0.5)
+n1_data = filter_data(n1_data, filter_coef, numtaps)
+
 n2_data = add_brownian_white_noise(perfect_data, 1.0)
+n2_data = filter_data(n2_data, filter_coef, numtaps)
+
 n3_data = add_brownian_white_noise(perfect_data, 1.5)
+n3_data = filter_data(n3_data, filter_coef, numtaps)
+
 n4_data = add_brownian_white_noise(perfect_data, 2.0)
+n4_data = filter_data(n4_data, filter_coef, numtaps)
+
 n5_data = add_brownian_white_noise(perfect_data, 2.5)
+n5_data = filter_data(n5_data, filter_coef, numtaps)
+
 n6_data = add_brownian_white_noise(perfect_data, 3.0)
-n7_data = add_brownian_white_noise(perfect_data, 3.5)
-n8_data = add_brownian_white_noise(perfect_data, 4.0)
-n9_data = add_white_noise(perfect_data, 0.5)
-n10_data = add_white_noise(perfect_data, 1.0)
-n11_data = add_white_noise(perfect_data, 1.5)
-n12_data = add_white_noise(perfect_data, 2.0)
-n13_data = add_white_noise(perfect_data, 2.5)
-n14_data = add_white_noise(perfect_data, 3.0)
-n15_data = add_white_noise(perfect_data, 3.5)
+n6_data = filter_data(n6_data, filter_coef, numtaps)
+
+n7_data = add_brownian_white_noise(perfect_data, 3.5, brownian_noise_level=0.05)
+n7_data = filter_data(n7_data, filter_coef, numtaps)
+
+n8_data = add_brownian_white_noise(perfect_data, 4.0, brownian_noise_level=0.05)
+n8_data = filter_data(n8_data, filter_coef, numtaps)
+
+n9_data = add_brownian_white_noise(perfect_data, 4.5, brownian_noise_level=0.05)
+n9_data = filter_data(n9_data, filter_coef, numtaps)
+
+n10_data = add_brownian_white_noise(perfect_data, 5.0, brownian_noise_level=0.05)
+n10_data = filter_data(n10_data, filter_coef, numtaps)
+
+n11_data = add_white_noise(perfect_data, 0.5)
+n11_data = filter_data(n11_data, filter_coef, numtaps)
+
+n12_data = add_white_noise(perfect_data, 1.0)
+n12_data = filter_data(n12_data, filter_coef, numtaps)
+
+n13_data = add_white_noise(perfect_data, 1.5)
+n13_data = filter_data(n13_data, filter_coef, numtaps)
+
+n14_data = add_white_noise(perfect_data, 2.0)
+n14_data = filter_data(n14_data, filter_coef, numtaps)
+
+n15_data = add_white_noise(perfect_data, 2.5)
+n15_data = filter_data(n15_data, filter_coef, numtaps)
+
 n16_data = add_white_noise(perfect_data, 4.0)
+n16_data = filter_data(n16_data, filter_coef, numtaps)
+
+# all_noisy_data = [n1_data, n2_data, n3_data, n4_data, n5_data, n6_data, n7_data, n8_data, n9_data, n10_data, n11_data, n12_data, n13_data, n14_data, n15_data, n16_data]
 
 windows_clean = list_to_overlapping_windows(perfect_data, window_length=WINDOW_WIDTH, overlap=OVERLAP)
 windows_n1 = list_to_overlapping_windows(n1_data, window_length=WINDOW_WIDTH, overlap=OVERLAP)

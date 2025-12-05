@@ -32,7 +32,8 @@ clean_data = DAE_funcs.overlapping_windows_to_list(clean_windows, OVERLAP)
 stand_devs = [abs(x)/0.6745 for x in clean_data]
 threshold = 40*np.median(stand_devs)
 
+# plt.plot(noisy_data, linestyle="dotted")
 plt.plot(clean_data)
 plt.hlines([threshold], linestyle=[':'], xmin=0, xmax=len(clean_data))
-# plt.plot(noisy_data, linestyle="dotted")
+
 plt.show()

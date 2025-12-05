@@ -33,8 +33,8 @@ if __name__ == "__main__":
         # Merge windows back into single stream
         clean_data = DAE_funcs.overlapping_windows_to_list(clean_windows, OVERLAP)
 
-        # Scale data to [0,1]
-        clean_data_scaled = utils.minmax_scale(clean_data)
+        # # Scale data to [0,1]
+        # clean_data_scaled = utils.minmax_scale(clean_data)
 
         # Find peaks in data using a dynamic, standard deviation based peak detection
         peaks = utils.noise_dependent_peak_detection(clean_data.flatten())
@@ -43,7 +43,7 @@ if __name__ == "__main__":
         Index = utils.peaks_to_spike_index(peaks)
 
         # Gather spike data windows
-        spikes = utils.extract_spike_windows(clean_data_scaled, Index)
+        spikes = utils.extract_spike_windows(clean_data, Index)
         print(spikes.shape)
 
         # Classify each spike
