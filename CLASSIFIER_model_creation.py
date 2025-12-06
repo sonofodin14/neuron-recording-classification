@@ -15,6 +15,8 @@ if __name__ == "__main__":
     d_n3 = add_brownian_white_noise(d, 2)
     d_n4 = add_brownian_white_noise(d, 3)
     d_n5 = add_brownian_white_noise(d, 4)
+    d_n6 = add_brownian_white_noise(d, 4)
+    d_n7 = add_brownian_white_noise(d, 4)
 
     # High-pass filter the data
     numtaps = 1501
@@ -38,6 +40,9 @@ if __name__ == "__main__":
 
     filtered_d_n5 = utils.filter_data(d_n5, filter_coef, numtaps)
     # filtered_d_n5 = utils.minmax_scale(filtered_d_n5)
+
+    filtered_d_n6 = utils.filter_data(d_n6, filter_coef, numtaps)
+    filtered_d_n7 = utils.filter_data(d_n7, filter_coef, numtaps)
 
     # Load denoising model
     denoiser = utils.load_denoising_model()
@@ -84,6 +89,20 @@ if __name__ == "__main__":
     # Merge windows back into single stream
     clean_data5 = DAE_funcs.overlapping_windows_to_list(clean_windows5, OVERLAP)
 
+    # Split data into windows and denoise
+    noisy_windows6 = DAE_funcs.list_to_overlapping_windows(filtered_d_n6, WINDOW_WIDTH, OVERLAP)
+    predictions6 = denoiser.predict(noisy_windows6, verbose=2)
+    clean_windows6 = np.squeeze(predictions6, axis=-1)
+    # Merge windows back into single stream
+    clean_data6 = DAE_funcs.overlapping_windows_to_list(clean_windows6, OVERLAP)
+
+    # Split data into windows and denoise
+    noisy_windows7 = DAE_funcs.list_to_overlapping_windows(filtered_d_n7, WINDOW_WIDTH, OVERLAP)
+    predictions7 = denoiser.predict(noisy_windows7, verbose=2)
+    clean_windows7 = np.squeeze(predictions7, axis=-1)
+    # Merge windows back into single stream
+    clean_data7 = DAE_funcs.overlapping_windows_to_list(clean_windows7, OVERLAP)
+
     # Extract spikes from indexes
     spikes0 = utils.extract_spike_windows(clean_data0, Index)
     spikes1 = utils.extract_spike_windows(clean_data1, Index)
@@ -91,6 +110,8 @@ if __name__ == "__main__":
     spikes3 = utils.extract_spike_windows(clean_data3, Index)
     spikes4 = utils.extract_spike_windows(clean_data4, Index)
     spikes5 = utils.extract_spike_windows(clean_data5, Index)
+    spikes6 = utils.extract_spike_windows(clean_data6, Index)
+    spikes7 = utils.extract_spike_windows(clean_data7, Index)
 
     # Create new spikes array that are shifted by random values to increase training robustness
     shifted_spikes_1 = []
@@ -106,15 +127,15 @@ if __name__ == "__main__":
     # Add slightly noisy spikes to training data
     shifted_spikes_3 = []
     for spike in spikes0:
-        noisy_spike = DAE_funcs.add_white_noise(spike, 0.02)
+        noisy_spike = DAE_funcs.add_white_noise(spike, 0.2)
         shifted_spikes_3.append(noisy_spike)
 
     plt.plot(shifted_spikes_3[0])
     plt.show()
 
     # Combine the original and added data
-    spikes = np.asarray(list(spikes0) + list(shifted_spikes_1) + list(shifted_spikes_2) + list(shifted_spikes_3) + list(spikes1) + list(spikes2) + list(spikes3) + list(spikes4) + list(spikes5))
-    Class = np.asarray(list(Class) + list(Class) + list(Class) + list(Class) + list(Class) + list(Class) + list(Class) + list(Class) + list(Class))
+    spikes = np.asarray(list(spikes0) + list(shifted_spikes_1) + list(shifted_spikes_2) + list(shifted_spikes_3) + list(spikes1) + list(spikes2) + list(spikes3) + list(spikes4) + list(spikes5) + list(spikes6) + list(spikes7))
+    Class = np.asarray(list(Class) + list(Class) + list(Class) + list(Class) + list(Class) + list(Class) + list(Class) + list(Class) + list(Class) + list(Class) + list(Class))
 
     print(spikes.shape)
 

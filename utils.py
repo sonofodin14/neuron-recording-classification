@@ -148,30 +148,31 @@ def make_model(input_shape, num_classes):
     input_layer = keras.layers.Input(input_shape)
 
     # Branch 1: Small details
-    branch_a = layers.Conv1D(filters=64, kernel_size=4, padding="same")(input_layer)
+    branch_a = layers.Conv1D(filters=32, kernel_size=3, padding="same")(input_layer)
     branch_a = layers.BatchNormalization()(branch_a)
     branch_a = layers.LeakyReLU()(branch_a)
 
     # Branch 2: Medium patterns
-    branch_b = layers.Conv1D(filters=64, kernel_size=8, padding="same")(input_layer)
+    branch_b = layers.Conv1D(filters=32, kernel_size=7, padding="same")(input_layer)
     branch_b = layers.BatchNormalization()(branch_b)
     branch_b = layers.LeakyReLU()(branch_b)
 
     # Branch 3: Long trends
-    branch_c = layers.Conv1D(filters=64, kernel_size=16, padding="same")(input_layer)
+    branch_c = layers.Conv1D(filters=32, kernel_size=15, padding="same")(input_layer)
     branch_c = layers.BatchNormalization()(branch_c)
     branch_c = layers.LeakyReLU()(branch_c)
 
     x = layers.Concatenate()([branch_a, branch_b, branch_c])
 
-    x = layers.Conv1D(filters=64, kernel_size=4, padding="same", strides=1)(x)
+    x = layers.Conv1D(filters=64, kernel_size=3, padding="same")(x)
     x = layers.BatchNormalization()(x)
     x = layers.LeakyReLU()(x)
 
     # x = layers.MaxPooling1D(pool_size=2)(x)
 
-    x = layers.Bidirectional(layers.LSTM(units=64, return_sequences=False))(x)
-    x = layers.Dropout(0.2)(x)
+    x = layers.Bidirectional(layers.LSTM(units=32, return_sequences=False))(x)
+    x = layers.Dropout(0.3)(x)
+    # x = layers.GlobalAveragePooling1D()(x)
 
     x = layers.Dense(128, activation="relu")(x)
     x = layers.Dropout(0.2)(x)
